@@ -7,9 +7,9 @@ const express = require('express');
 const app = express();
 const handler = require('./function/handler');
 const bodyParser = require('body-parser');
-const fs = require(fs);
+const fs = require("fs");
 
-const secret = fs.readFileSync('/var/openfaas/secrets/internal-secret');
+const secret = fs.readFileSync('/var/openfaas/secrets/internal-secret', 'utf-8');
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -109,5 +109,5 @@ let isObject = (a) => {
 };
 
 let isInternal = (req) => {
-    return secret == req.get("Http_Internal_Secret");
+    return secret === req.get("x-http-internal-secret");
 }
