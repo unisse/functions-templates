@@ -3,10 +3,13 @@
 
 "use strict"
 
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 const handler = require('./function/handler');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const fs = require(fs);
+
+const secret = fs.readFileSync('/var/openfaas/secrets/internal-secret');
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -77,7 +80,12 @@ var middleware = (req, res) => {
     let fnEvent = new FunctionEvent(req);
     let fnContext = new FunctionContext(cb);
 
-    handler(fnEvent, fnContext, cb);
+    if(isInternal(req)) {
+        handler(fnEvent, fnContext, cb);
+    } else {
+        fnContext.status(403).succeed('Essa função é para uso interno!');
+    }
+
 };
 
 app.post('/*', middleware);
@@ -99,3 +107,7 @@ let isArray = (a) => {
 let isObject = (a) => {
     return (!!a) && (a.constructor === Object);
 };
+
+let isInternal = (req) => {
+    return secret == req.get("Http_Internal_Secret");
+}

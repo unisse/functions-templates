@@ -3,10 +3,13 @@
 
 "use strict"
 
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 const handler = require('./function/handler');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const axios = require('axios');
+
+const authorizeUrl = "http://gateway/function/authorize";
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -77,7 +80,15 @@ var middleware = (req, res) => {
     let fnEvent = new FunctionEvent(req);
     let fnContext = new FunctionContext(cb);
 
-    handler(fnEvent, fnContext, cb);
+    axios.post(url, fnEvent.headers.authorization).then(function (response) {
+        handler(fnEvent, fnContext, cb);
+    })
+    .catch(function (error) {
+        context.status(403).succeed(error);
+    });
+
+
+    
 };
 
 app.post('/*', middleware);
